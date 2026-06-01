@@ -1,0 +1,7 @@
+# Checkov exceptions for demo-api
+# Format: skip-check: list of check IDs
+
+skip-check:
+  # Example — uncomment to apply:
+  # - CKV_AWS_150  # ALB deletion protection disabled intentionally in dev
+  # - CKV_AWS_91   # ALB access logs pending log bucket setup
