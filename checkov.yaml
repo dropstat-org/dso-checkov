@@ -1,7 +1,10 @@
-# Checkov exceptions for demo-api
-# Format: skip-check: list of check IDs
+# Checkov exceptions for gha-demo-api-ecs
+# Repo: dropstat-org/gha-demo-api-ecs
+# Branch: release/gha-demo-api-ecs
+#
+# Format: skip-check list. Add reason as comment.
+# The pipeline picks this up automatically on every run.
 
 skip-check:
-  # Example — uncomment to apply:
+  # Example:
   # - CKV_AWS_150  # ALB deletion protection disabled intentionally in dev
-  # - CKV_AWS_91   # ALB access logs pending log bucket setup
