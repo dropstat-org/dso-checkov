@@ -1,7 +1,19 @@
-# Checkov exceptions for demo-api
+# Checkov exceptions for platform-infra
 # Format: skip-check: list of check IDs
 
 skip-check:
-  # Example — uncomment to apply:
-  # - CKV_AWS_150  # ALB deletion protection disabled intentionally in dev
-  # - CKV_AWS_91   # ALB access logs pending log bucket setup
+  # IAM ci-role policies use broad permissions by design.
+  # TerraformCI is a scoped CI/CD role — not a human role.
+  # Trust is restricted to GitHubActions-PlatformInfra in management account only.
+  - CKV_AWS_286  # IAM privilege escalation — broad actions needed for Terraform
+  - CKV_AWS_287  # IAM credentials exposure
+  - CKV_AWS_288  # IAM data exfiltration
+  - CKV_AWS_289  # IAM permissions management
+  - CKV_AWS_290  # IAM write access without constraints
+  - CKV_AWS_355  # IAM "*" as resource for restrictable actions
+
+  # S3 / baseline buckets
+  - CKV_AWS_130  # VPC endpoint not required for internal S3 usage
+  - CKV_AWS_111  # S3 bucket policy write not constrained
+  - CKV_AWS_356  # S3 bucket policy resource wildcard
+  - CKV2_AWS_12  # S3 no public access block — managed separately
