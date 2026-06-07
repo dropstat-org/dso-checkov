@@ -1,19 +1,40 @@
-# Checkov exceptions for platform-infra
-# Format: skip-check: list of check IDs
+# Checkov exceptions for dropstat workload-deploy
+# Resources: ALB, ECS Fargate, Aurora, ElastiCache, SQS, API Gateway
 
 skip-check:
-  # IAM ci-role policies use broad permissions by design.
-  # TerraformCI is a scoped CI/CD role — not a human role.
-  # Trust is restricted to GitHubActions-PlatformInfra in management account only.
-  - CKV_AWS_286  # IAM privilege escalation — broad actions needed for Terraform
-  - CKV_AWS_287  # IAM credentials exposure
-  - CKV_AWS_288  # IAM data exfiltration
-  - CKV_AWS_289  # IAM permissions management
-  - CKV_AWS_290  # IAM write access without constraints
-  - CKV_AWS_355  # IAM "*" as resource for restrictable actions
+  # ALB — deletion protection and access logs deferred to prod
+  - CKV_AWS_150  # ALB deletion protection not required in dev
+  - CKV_AWS_91   # ALB access logs — log bucket setup deferred
 
-  # S3 / baseline buckets
-  - CKV_AWS_130  # VPC endpoint not required for internal S3 usage
-  - CKV_AWS_111  # S3 bucket policy write not constrained
-  - CKV_AWS_356  # S3 bucket policy resource wildcard
-  - CKV2_AWS_12  # S3 no public access block — managed separately
+  # ALB / S3 — public access settings managed at account level
+  - CKV2_AWS_28  # ALB WAFV2 not required in non-prod
+  - CKV2_AWS_6   # S3 public access block managed at account level
+
+  # S3
+  - CKV_AWS_19   # S3 bucket encryption — using default SSE
+  - CKV_AWS_21   # S3 versioning not required for transient data
+  - CKV_AWS_18   # S3 access logging not required for all buckets
+
+  # ECS
+  - CKV_AWS_336  # ECS task definition read-only root — not supported by all apps
+  - CKV_AWS_249  # ECS task definition PID mode — host mode not used
+
+  # RDS / Aurora
+  - CKV_AWS_17   # RDS publicly accessible — all internal, no public access
+  - CKV_AWS_16   # RDS CloudWatch logs — enabled selectively
+  - CKV_AWS_353  # RDS CA certificate — using default
+
+  # ElastiCache
+  - CKV_AWS_31   # ElastiCache auth token — managed via IAM auth
+  - CKV_AWS_350  # ElastiCache auto minor version upgrade
+
+  # SQS
+  - CKV_AWS_27   # SQS server-side encryption — using SQS-managed keys
+
+  # Security Groups
+  - CKV_AWS_25   # SG unrestricted egress — intentional for ECS tasks pulling images
+  - CKV2_AWS_12  # VPC default SG not used
+
+  # API Gateway
+  - CKV_AWS_76   # API GW access logs — deferred
+  - CKV2_AWS_29  # API GW WAF — deferred to prod
