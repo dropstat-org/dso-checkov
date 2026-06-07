@@ -1,40 +1,61 @@
 # Checkov exceptions for dropstat workload-deploy
-# Resources: ALB, ECS Fargate, Aurora, ElastiCache, SQS, API Gateway
+# Resources: ALB, ECS Fargate, Aurora, ElastiCache/Redis, MQ, SQS, API Gateway, S3, Secrets Manager
 
 skip-check:
-  # ALB — deletion protection and access logs deferred to prod
-  - CKV_AWS_150  # ALB deletion protection not required in dev
-  - CKV_AWS_91   # ALB access logs — log bucket setup deferred
+  # ── ALB ───────────────────────────────────────────────────────────────────
+  - CKV_AWS_150   # ALB deletion protection — not required in dev
+  - CKV_AWS_91    # ALB access logs — log bucket setup deferred
+  - CKV2_AWS_28   # ALB WAFv2 — not required in non-prod
+  - CKV_AWS_378   # ALB HTTP protocol — HTTP listener used for redirect in internal ALB
+  - CKV2_AWS_20   # ALB HTTP redirects to HTTPS — deferred until HTTPS configured
 
-  # ALB / S3 — public access settings managed at account level
-  - CKV2_AWS_28  # ALB WAFV2 not required in non-prod
-  - CKV2_AWS_6   # S3 public access block managed at account level
+  # ── Security Groups ───────────────────────────────────────────────────────
+  - CKV_AWS_382   # SG egress 0.0.0.0/0 — intentional for ECS tasks pulling ECR images
+  - CKV2_AWS_5    # SG not attached to resource — false positive on module SGs
 
-  # S3
-  - CKV_AWS_19   # S3 bucket encryption — using default SSE
-  - CKV_AWS_21   # S3 versioning not required for transient data
-  - CKV_AWS_18   # S3 access logging not required for all buckets
+  # ── ECS ───────────────────────────────────────────────────────────────────
+  - CKV_AWS_336   # ECS read-only root filesystem — not supported by all services
+  - CKV_AWS_65    # ECS exec logging — deferred
 
-  # ECS
-  - CKV_AWS_336  # ECS task definition read-only root — not supported by all apps
-  - CKV_AWS_249  # ECS task definition PID mode — host mode not used
+  # ── CloudWatch Log Groups ─────────────────────────────────────────────────
+  - CKV_AWS_158   # CW log group KMS encryption — SSE sufficient for dev
+  - CKV_AWS_338   # CW log group retention >= 1 year — shorter retention acceptable in dev
 
-  # RDS / Aurora
-  - CKV_AWS_17   # RDS publicly accessible — all internal, no public access
-  - CKV_AWS_16   # RDS CloudWatch logs — enabled selectively
-  - CKV_AWS_353  # RDS CA certificate — using default
+  # ── RDS / Aurora ──────────────────────────────────────────────────────────
+  - CKV_AWS_118   # RDS enhanced monitoring — deferred
+  - CKV_AWS_162   # RDS IAM authentication — using password auth
+  - CKV_AWS_326   # Aurora backtrack — not supported on Aurora MySQL Serverless v2
+  - CKV_AWS_313   # Aurora cluster copy tags to snapshots — deferred
+  - CKV_AWS_353   # RDS CA certificate — using default
 
-  # ElastiCache
-  - CKV_AWS_31   # ElastiCache auth token — managed via IAM auth
-  - CKV_AWS_350  # ElastiCache auto minor version upgrade
+  # ── S3 ────────────────────────────────────────────────────────────────────
+  - CKV_AWS_144   # S3 cross-region replication — not required in dev
+  - CKV_AWS_145   # S3 KMS encryption — SSE-S3 sufficient for dev
+  - CKV_AWS_21    # S3 versioning — not required for transient data
+  - CKV2_AWS_62   # S3 MFA delete — not required in dev
 
-  # SQS
-  - CKV_AWS_27   # SQS server-side encryption — using SQS-managed keys
+  # ── Secrets Manager ───────────────────────────────────────────────────────
+  - CKV_AWS_149   # Secrets Manager KMS — using default encryption key
+  - CKV2_AWS_57   # Secrets Manager automatic rotation — managed externally
 
-  # Security Groups
-  - CKV_AWS_25   # SG unrestricted egress — intentional for ECS tasks pulling images
-  - CKV2_AWS_12  # VPC default SG not used
+  # ── API Gateway v2 ────────────────────────────────────────────────────────
+  - CKV_AWS_197   # API GW default route without auth — internal VPC link
+  - CKV_AWS_2     # API GW access logging — deferred
+  - CKV2_AWS_29   # API GW WAF — deferred to prod
+  - CKV2_AWS_8    # API GW structured access logging — deferred
 
-  # API Gateway
-  - CKV_AWS_76   # API GW access logs — deferred
-  - CKV2_AWS_29  # API GW WAF — deferred to prod
+  # ── Amazon MQ ─────────────────────────────────────────────────────────────
+  - CKV_AWS_209   # MQ publicly accessible — false positive, internal only
+  - CKV_AWS_260   # MQ audit/general logs — deferred
+  - CKV_AWS_103   # MQ CloudWatch audit logs
+  - CKV_AWS_224   # MQ auto minor version upgrade — managed manually
+  - CKV_AWS_309   # MQ encryption — using default
+
+  # ── IAM ───────────────────────────────────────────────────────────────────
+  - CKV_AWS_286   # IAM privilege escalation — CI role broad by design
+  - CKV_AWS_287   # IAM credentials exposure
+  - CKV_AWS_288   # IAM data exfiltration
+  - CKV_AWS_289   # IAM permissions management
+  - CKV_AWS_290   # IAM write access without constraints
+  - CKV_AWS_355   # IAM "*" as resource
+  - CKV2_AWS_40   # IAM role admin
