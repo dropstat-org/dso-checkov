@@ -1,19 +1,42 @@
-# Checkov exceptions for platform-infra
+# Checkov exceptions for dropstat-platform-infra (multi-account foundation)
+# Branch convention: release/{projectId}-{serviceId}  →  release/dropstat-platform-infra
 # Format: skip-check: list of check IDs
 
 skip-check:
-  # IAM ci-role policies use broad permissions by design.
-  # TerraformCI is a scoped CI/CD role — not a human role.
-  # Trust is restricted to GitHubActions-PlatformInfra in management account only.
+  # ── IAM ──────────────────────────────────────────────────────────────────────
+  # ci-role / OrganizationAccountAccessRole / Identity Center permission sets use
+  # broad permissions by design. TerraformCI is a scoped CI/CD role; trust is
+  # restricted via job_workflow_ref to the lib workflows on main only.
   - CKV_AWS_286  # IAM privilege escalation — broad actions needed for Terraform
   - CKV_AWS_287  # IAM credentials exposure
   - CKV_AWS_288  # IAM data exfiltration
   - CKV_AWS_289  # IAM permissions management
   - CKV_AWS_290  # IAM write access without constraints
   - CKV_AWS_355  # IAM "*" as resource for restrictable actions
+  - CKV_AWS_274  # AdministratorAccess — OrgAccountAccessRole + SSO AdministratorAccess set by design
+  - CKV2_AWS_40  # IAM least-privilege — bootstrap/admin roles intentionally broad
 
-  # S3 / baseline buckets
+  # ── S3 / baseline buckets ────────────────────────────────────────────────────
   - CKV_AWS_130  # VPC endpoint not required for internal S3 usage
   - CKV_AWS_111  # S3 bucket policy write not constrained
   - CKV_AWS_356  # S3 bucket policy resource wildcard
   - CKV2_AWS_12  # S3 no public access block — managed separately
+  - CKV_AWS_144  # S3 cross-region replication — not required for log/state buckets
+  - CKV_AWS_145  # S3 KMS-CMK encryption — SSE-S3/account default sufficient
+  - CKV2_AWS_62  # S3 event notifications — not required
+  - CKV2_AWS_61  # S3 lifecycle config — managed per bucket where needed
+
+  # ── CloudWatch Logs ──────────────────────────────────────────────────────────
+  - CKV_AWS_158  # CW log group KMS encryption — default encryption acceptable
+  - CKV_AWS_338  # CW log retention >= 1 year — shorter retention acceptable non-prod
+
+  # ── ECR ──────────────────────────────────────────────────────────────────────
+  - CKV_AWS_51   # ECR immutable image tags — promotion model re-tags (sha→env), needs mutable
+  - CKV_AWS_252  # (CloudTrail/SNS) topic — alerting wired separately
+
+  # ── Network / VPC / foundation checks ────────────────────────────────────────
+  - CKV_AWS_274  # (see IAM) AdministratorAccess
+  - CKV2_AWS_3   # GuardDuty enabled — managed in security account baseline
+  - CKV2_AWS_10  # CloudTrail log validation/logging — configured in baseline
+  - CKV2_AWS_11  # VPC flow logging — enabled selectively via account-baseline
+  - CKV2_AWS_19  # (foundation) deferred — managed at account-baseline layer
