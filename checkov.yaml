@@ -62,3 +62,6 @@ skip-check:
 
   # ── Route 53 ──────────────────────────────────────────────────────────────
   - CKV2_AWS_38   # Route53 DNSSEC signing — non-prod domain, accepted risk
+
+  # ── ACM ───────────────────────────────────────────────────────────────────
+  - CKV2_AWS_71   # ACM wildcard cert — *.dev.dropstat.com intentional for dev environment
