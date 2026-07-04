@@ -1,67 +1,46 @@
-# Checkov exceptions for dropstat workload-deploy
-# Resources: ALB, ECS Fargate, Aurora, ElastiCache/Redis, MQ, SQS, API Gateway, S3, Secrets Manager
+# Checkov exceptions for dropstat SonarQube (dropstat-aws-ecs-sonar-qube)
+# Repo:   dropstat-org/dropstat-aws-ecs-sonar-qube
+# Branch: release/dropstat-sonarqube
+#
+# SonarQube interno en shared-services: ECS Fargate + EFS + RDS PostgreSQL,
+# ALB INTERNO (HTTP, acceso solo via VPN/TGW). Excepciones justificadas para una
+# herramienta interna de bajo riesgo. Cargado automaticamente por el pipeline.
 
 skip-check:
-  # ── ALB ───────────────────────────────────────────────────────────────────
-  - CKV_AWS_150   # ALB deletion protection — not required in dev
-  - CKV_AWS_91    # ALB access logs — log bucket setup deferred
-  - CKV2_AWS_28   # ALB WAFv2 — not required in non-prod
-  - CKV_AWS_378   # ALB HTTP protocol — HTTP listener used for redirect in internal ALB
-  - CKV2_AWS_20   # ALB HTTP redirects to HTTPS — deferred until HTTPS configured
+  # -- ALB interno (HTTP, sin exposicion a internet) --------------------------
+  - CKV_AWS_2     # ALB listener HTTPS -- ALB interno HTTP, HTTPS diferido (acceso via VPN)
+  - CKV_AWS_103   # ALB TLS 1.2 -- sin TLS (HTTP interno)
+  - CKV_AWS_378   # ALB target group HTTP -- interno
+  - CKV2_AWS_20   # ALB redirect HTTP->HTTPS -- HTTP-only interno
+  - CKV2_AWS_28   # WAFv2 -- no aplica a ALB interno
+  - CKV_AWS_150   # ALB deletion protection -- no requerido
+  - CKV_AWS_91    # ALB access logs -- diferido
+  - CKV_AWS_131   # ALB drop HTTP headers -- interno
 
-  # ── Security Groups ───────────────────────────────────────────────────────
-  - CKV_AWS_382   # SG egress 0.0.0.0/0 — intentional for ECS tasks pulling ECR images
-  - CKV2_AWS_5    # SG not attached to resource — false positive on module SGs
+  # -- Security Groups --------------------------------------------------------
+  - CKV_AWS_382   # SG egress 0.0.0.0/0 -- necesario (pull ECR, RDS, NFS via egress)
+  - CKV2_AWS_5    # SG no attached -- falso positivo (los SG se usan cross-modulo)
 
-  # ── ECS ───────────────────────────────────────────────────────────────────
-  - CKV_AWS_336   # ECS read-only root filesystem — not supported by all services
-  - CKV_AWS_65    # ECS exec logging — deferred
+  # -- RDS PostgreSQL (tool interno) ------------------------------------------
+  - CKV_AWS_157   # RDS multi-AZ -- single-AZ a proposito
+  - CKV_AWS_293   # RDS deletion protection -- no requerido
+  - CKV_AWS_118   # RDS enhanced monitoring
+  - CKV_AWS_129   # RDS log exports
+  - CKV_AWS_161   # RDS IAM auth
+  - CKV_AWS_353   # RDS performance insights
+  - CKV_AWS_354   # RDS performance insights CMK
+  - CKV2_AWS_30   # RDS Postgres query logging
+  - CKV2_AWS_60   # RDS copy tags to snapshots
 
-  # ── CloudWatch Log Groups ─────────────────────────────────────────────────
-  - CKV_AWS_158   # CW log group KMS encryption — SSE sufficient for dev
-  - CKV_AWS_338   # CW log group retention >= 1 year — shorter retention acceptable in dev
+  # -- Encriptacion por CMK (default AWS-managed aceptable para tool interno) --
+  - CKV_AWS_158   # CloudWatch Log Group CMK
+  - CKV_AWS_149   # Secrets Manager CMK
+  - CKV_AWS_224   # ECS cluster logging CMK
+  - CKV_AWS_184   # EFS CMK
 
-  # ── RDS / Aurora ──────────────────────────────────────────────────────────
-  - CKV_AWS_118   # RDS enhanced monitoring — deferred
-  - CKV_AWS_162   # RDS IAM authentication — using password auth
-  - CKV_AWS_326   # Aurora backtrack — not supported on Aurora MySQL Serverless v2
-  - CKV_AWS_313   # Aurora cluster copy tags to snapshots — deferred
-  - CKV_AWS_353   # RDS CA certificate — using default
+  # -- Logs / secrets (tool interno) ------------------------------------------
+  - CKV_AWS_338   # CloudWatch retencion >= 1 anio -- 30d suficiente
+  - CKV2_AWS_57   # Secrets Manager rotacion automatica -- no configurada
 
-  # ── S3 ────────────────────────────────────────────────────────────────────
-  - CKV_AWS_144   # S3 cross-region replication — not required in dev
-  - CKV_AWS_145   # S3 KMS encryption — SSE-S3 sufficient for dev
-  - CKV_AWS_21    # S3 versioning — not required for transient data
-  - CKV2_AWS_62   # S3 MFA delete — not required in dev
-
-  # ── Secrets Manager ───────────────────────────────────────────────────────
-  - CKV_AWS_149   # Secrets Manager KMS — using default encryption key
-  - CKV2_AWS_57   # Secrets Manager automatic rotation — managed externally
-
-  # ── API Gateway v2 ────────────────────────────────────────────────────────
-  - CKV_AWS_197   # API GW default route without auth — internal VPC link
-  - CKV_AWS_2     # API GW access logging — deferred
-  - CKV2_AWS_29   # API GW WAF — deferred to prod
-  - CKV2_AWS_8    # API GW structured access logging — deferred
-
-  # ── Amazon MQ ─────────────────────────────────────────────────────────────
-  - CKV_AWS_209   # MQ publicly accessible — false positive, internal only
-  - CKV_AWS_260   # MQ audit/general logs — deferred
-  - CKV_AWS_103   # MQ CloudWatch audit logs
-  - CKV_AWS_224   # MQ auto minor version upgrade — managed manually
-  - CKV_AWS_309   # MQ encryption — using default
-
-  # ── IAM ───────────────────────────────────────────────────────────────────
-  - CKV_AWS_286   # IAM privilege escalation — CI role broad by design
-  - CKV_AWS_287   # IAM credentials exposure
-  - CKV_AWS_288   # IAM data exfiltration
-  - CKV_AWS_289   # IAM permissions management
-  - CKV_AWS_290   # IAM write access without constraints
-  - CKV_AWS_355   # IAM "*" as resource
-  - CKV2_AWS_40   # IAM role admin
-
-  # ── Route 53 ──────────────────────────────────────────────────────────────
-  - CKV2_AWS_38   # Route53 DNSSEC signing — non-prod domain, accepted risk
-
-  # ── ACM ───────────────────────────────────────────────────────────────────
-  - CKV2_AWS_71   # ACM wildcard cert — *.dev.dropstat.com intentional for dev environment
+  # -- ECS --------------------------------------------------------------------
+  - CKV_AWS_336   # readonly root filesystem -- SonarQube necesita FS de escritura
