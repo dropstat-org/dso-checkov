@@ -27,12 +27,15 @@ skip-check:
   - CKV_AWS_326   # Aurora backtrack — not supported on Aurora MySQL Serverless v2
   - CKV_AWS_313   # Aurora cluster copy tags to snapshots — deferred
   - CKV_AWS_353   # RDS CA certificate — using default
+  - CKV_AWS_327   # RDS cluster KMS CMK — false positive: cluster restores from a CMK-encrypted
+                  # snapshot (inherits the CMK), so no explicit kms_key_id appears in the plan
 
   # ── S3 ────────────────────────────────────────────────────────────────────
   - CKV_AWS_144   # S3 cross-region replication — not required in dev
   - CKV_AWS_145   # S3 KMS encryption — SSE-S3 sufficient for dev
   - CKV_AWS_21    # S3 versioning — not required for transient data
   - CKV2_AWS_62   # S3 MFA delete — not required in dev
+  - CKV_AWS_18    # S3 access logging — deferred in non-prod (same rationale as ALB CKV_AWS_91)
 
   # ── Secrets Manager ───────────────────────────────────────────────────────
   - CKV_AWS_149   # Secrets Manager KMS — using default encryption key
@@ -41,6 +44,7 @@ skip-check:
   # ── API Gateway v2 ────────────────────────────────────────────────────────
   - CKV_AWS_197   # API GW default route without auth — internal VPC link
   - CKV_AWS_2     # API GW access logging — deferred
+  - CKV_AWS_76    # API GW access logging (v2 domain) — deferred, internal VPC-link API
   - CKV2_AWS_29   # API GW WAF — deferred to prod
   - CKV2_AWS_8    # API GW structured access logging — deferred
 
