@@ -44,3 +44,7 @@ skip-check:
 
   # -- ECS --------------------------------------------------------------------
   - CKV_AWS_336   # readonly root filesystem -- SonarQube necesita FS de escritura
+
+  # -- Route53 (zona publica tools.dropstat.com) ------------------------------
+  - CKV2_AWS_38   # Route53 DNSSEC -- dominio de herramientas internas, riesgo aceptado
+  - CKV2_AWS_39   # Route53 query logging -- no requerido para tool interno
