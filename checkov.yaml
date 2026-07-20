@@ -1,7 +1,14 @@
-# Checkov exceptions for demo-api
+# Checkov exceptions for github-org (org governance Terraform)
+# Branch convention: release/{projectId}  ->  release/dropstat-github-org
 # Format: skip-check: list of check IDs
 
 skip-check:
-  # Example — uncomment to apply:
-  # - CKV_AWS_150  # ALB deletion protection disabled intentionally in dev
-  # - CKV_AWS_91   # ALB access logs pending log bucket setup
+  # ── GitHub repository / branch protection ────────────────────────────────────
+  - CKV2_GIT_1  # "Ensure each Repository has branch protection associated" — this
+                # check only recognizes the legacy github_branch_protection resource.
+                # This org protects branches exclusively via github_organization_ruleset
+                # (see org/config/rulesets.tf: branch_protection, branch_protection_merge_commit,
+                # master_protection, required_ci), which applies org-wide by repository_name
+                # match rather than a per-repository resource reference, so Checkov's
+                # graph-based check can't see the association. Confirmed active via
+                # `gh api orgs/dropstat-org/rulesets` — false positive, not a gap.
